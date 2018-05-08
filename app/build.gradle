@@ -1,0 +1,185 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "com.liubin.fenghui.annotation"
+        minSdkVersion 15
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation project(':annotations')
+//    implementation project(':processors')
+    annotationProcessor project(':processors')
+    compile project(path: ':processors')
+}
+
+/**
+ * 生成MVP Fragment系列类
+ */
+class GenerateMVPFragment extends DefaultTask {
+    String domain
+
+    private String rootPath = project.getRootDir().getAbsolutePath()
+    private String basePath = '/app/src/main/java/com/liubin/fenghui/annotation'
+    private String packageName = "com.liubin.fenghui.annotation"
+
+    static def releaseTime() {
+        return new Date().format("yyyy/MM/dd HH:mm:ss (Z)", TimeZone.getTimeZone("UTC"))
+    }
+
+    @TaskAction
+    void generateContract() {
+        if (domain == null) {
+            throw new Exception("domain is empty, buddy!!")
+        }
+
+        def contractName = domain + "Contract"
+        def path = rootPath + basePath + "/contract"
+        def contractFile = new File(path, "${contractName}.java")
+        contractFile.createNewFile()
+        contractFile.text = "package ${packageName}.contract;\n" +
+                "\n" +
+                "/**\n" +
+                " * function---- ${contractName}\n" +
+                " * <p>\n" +
+                " * Created(Gradle default create) by LiuBin on ${releaseTime()}.\n" +
+                " */\n" +
+                "public interface ${contractName} {\n" +
+                "    interface Presenter{\n" +
+                "\n" +
+                "    }\n" +
+                "\n" +
+                "     interface View{\n" +
+                "\n" +
+                "    }\n" +
+                "}"
+        println "\n--------generateContract-------- \n" + "path:" + path + "\n" + "fileName: " + contractName
+    }
+
+    @TaskAction
+    void generatePresenter() {
+        if (domain == null) {
+            throw new Exception("domain is empty, buddy!!")
+        }
+
+        def presenterName = domain + "Presenter"
+        def path = rootPath + basePath + "/presenter"
+        def contractFile = new File(path, "${presenterName}.java")
+        contractFile.createNewFile()
+        contractFile.text = "package ${packageName}.presenter;\n" +
+                "\n" +
+                "\n" +
+                "import ${packageName}.base.BasePresenter;\n" +
+                "import ${packageName}.contract.${domain}Contract;\n" +
+                "import ${packageName}.Fragment.${domain}Fragment;\n" +
+                "\n" +
+                "import javax.inject.Inject;\n" +
+                "\n" +
+                "/**\n" +
+                " * function---- ${presenterName}\n" +
+                " * <p>\n" +
+                " * Created(Gradle default create) by LiuBin on ${releaseTime()}.\n" +
+                " */\n" +
+                "public class ${presenterName} extends BasePresenter<${domain}Fragment> implements ${domain}Contract.Presenter{\n" +
+                "    @Inject\n" +
+                "    public ${presenterName}() {}\n" +
+                "\n" +
+                "}"
+        println "\n--------generatePresenter-------- \n" + "path:" + path + "\n" + "fileName: " + presenterName
+    }
+
+    @TaskAction
+    void generateFragment() {
+        if (domain == null) {
+            throw new Exception("domain is empty, buddy!!")
+        }
+
+        def fragmentName = domain + "Fragment"
+        def path = rootPath + basePath + "/fragment"
+        def FragmentFile = new File(path, "${fragmentName}.java")
+        FragmentFile.createNewFile();
+        FragmentFile.text = "package  ${packageName}.fragment;\n" +
+                "\n" +
+                "import ${packageName}.presenter.${domain}Presenter;\n" +
+                "import  ${packageName}.contract.${domain}Contract;\n" +
+                "import  ${packageName}.base.BaseFragment;\n" +
+                "import android.os.Bundle;\n"+
+                "import com.alibaba.android.arouter.facade.annotation.Route;\n"+
+                "import  ${packageName}.arouter.ARouterConst;\n" +
+                "\n" +
+                "/**\n" +
+                " * function---- ${fragmentName}\n" +
+                " * <p>\n" +
+                " * Created(Gradle default create) by LiuBin on ${releaseTime()}.\n" +
+                " */\n" +
+                "@Route(path = ARouterConst.Fragment_${fragmentName})" +
+                "\n" +
+                "public class ${fragmentName} extends BaseFragment<${domain}Presenter> implements ${domain}Contract.View{\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected int getContentViewId() {\n" +
+                "        return 0;\n" +
+                "    }" +
+                "\n\n" +
+                "    @Override\n" +
+                "    protected void initData(Bundle savedInstanceState) {}" +
+                "\n\n" +
+                "    @Override\n" +
+                "    protected void injectSelf() {\n" +
+                "        fragmentComponent.inject(this);\n" +
+                "    }\n" +
+                "\n}"
+        println "\n--------generateFragment-------- \n" + "path:" + path + "\n" + "fileName: " + fragmentName
+    }
+}
+
+task mvp_fragment(type: GenerateMVPFragment) {
+    group 'personal'
+    description 'generate java code for MVP-Fragment architecture'
+    def domainParam = "Help"
+    if (domainParam) {
+        domain domainParam
+    }
+}
+
+
+task hello(type: My){
+    group 'my'
+    description
+}
+class My extends DefaultTask{
+    private String rootPath = project.getRootDir().getAbsolutePath()
+    private String basePath = '/app/src/main/java/com/liubin/fenghui/annotation'
+    private String packageName = "com.liubin.fenghui.annotation"
+
+    @TaskAction
+    void print(){
+        println("helloWorld")
+    }
+    @TaskAction
+    void Test(){
+        def name="Test"
+        def testFile=new File(rootPath+basePath,"${name}.java")
+        testFile.createNewFile()
+        testFile.text = "package  ${packageName};\n" +
+                "\n" +
+                "import android.os.Bundle;\n"+
+                "import com.alibaba.android.arouter.facade.annotation.Route;\n"+
+                "public class Test {\n" + "\n" + "\n}"
+    }
+}
